@@ -1,20 +1,168 @@
 ---
 title: "Homework Assignment #2"
 subtitle: "Exploring patterns of environmental justice"
-author: "UPDATE WITH YOUR NAME"
-date: last-modified
+author: "Yos"
+date: 10-21-24
 execute: 
-  eval: false
+  eval: true
 format:
   html:
     toc: true
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
+
+### Load libraries
+
+```{r}
+library(sf)
+library(here)
+library(tmap)
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+```
+
+### Read in data and transform crs
+
+```{r}
+ejscreen <- st_read(here::here("data", "ejscreen/EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb")) %>%
+  st_transform(crs = 4326)
+ca_ejscreen <- ejscreen %>%
+  filter(STATE_NAME == "California")
+la_ejscreen <- ca_ejscreen %>%
+  filter(CNTY_NAME == "Los Angeles County")
+holc <- st_read(here::here("data", "mapping-inequality/mapping-inequality-los-angeles.json")) %>%
+  st_transform(crs = 4326)
+biodiversity <- st_read(here::here("data","gbif-birds-LA/gbif-birds-LA.shp")) %>%
+  st_transform(crs = 4326)
+biodiversity_22 <- biodiversity %>%
+  filter(year == "2022")
+```
+
+#### Make sure data has the same crs
+
+```{r}
+crs1 <- st_crs(ejscreen)
+crs2 <- st_crs(holc)
+crs3 <- st_crs(biodiversity)
+```
+
+```{r}
+if (identical(crs1, crs2) && identical(crs1, crs3)) {
+    print("All datasets have the same CRS!")
+} else if (is.null(crs1) || is.null(crs2) || is.null(crs3)) {
+    print("One or more datasets do not have a defined CRS!")
+} else if (identical(crs1, crs2) || identical(crs1, crs3) || identical(crs2, crs3)) {
+    print("At least two datasets have the same CRS!")
+} else {
+    print("All datasets have different CRS!")
+}
+```
+
+```{r}
+class(holc$grade)
+```
+
 
 ## Part 1: Legacy of redlining in current environmental (in)justice
 
+```{r}
+
+# Make geometries valid
+holc <- st_make_valid(holc)
+
+# Set tmap mode to plot
+tmap_mode("plot")
+
+# Create the map
+map <- tm_shape(holc) +
+  tm_fill("grade", 
+           title = "HOLC Grade") +
+  tm_borders() +
+  tm_shape(la_ejscreen) +
+  tm_borders(lwd = 0.5) +
+  tm_layout(title = "Historical Redlining Neighborhoods",
+            legend.position = c("left", "bottom"))
+
+# Print the map
+print(map)
+
+```
+
+```{r}
+holc_summary <- holc %>%
+  group_by(grade) %>%
+  summarise(count = n(), 
+            percent = (count / nrow(holc)) * 100) %>%
+  mutate(grade = ifelse(is.na(grade), "None", grade)) %>%
+  select(grade, count, percent) %>%
+  st_drop_geometry()
+
+holc_summary %>%
+  kable(format = "html", caption = "Summary of HOLC Grades") %>%
+  kable_styling("striped", full_width = F)
+```
+
+```{r}
+
+joined_data <- st_join(holc, la_ejscreen, join = st_intersects)
+
+# Calculate means for specified variables
+conditions_summary <- joined_data %>%
+  group_by(grade) %>%
+  summarise(
+    mean_low_income = mean(LOWINCPCT, na.rm = TRUE),
+    mean_particulate_matter = mean(P_PM25, na.rm = TRUE),
+    mean_low_life_expectancy = mean(P_LIFEEXPPCT, na.rm = TRUE),
+    .groups = 'drop'
+  ) %>%
+  select(grade, mean_low_income, mean_particulate_matter, mean_low_life_expectancy) %>%
+  st_drop_geometry()
+
+conditions_summary %>%
+  kable(format = "html", caption = "Summary of Conditions by Grade") %>%
+  kable_styling("striped", full_width = F, position = "left") %>%
+  add_header_above(c(" " = 1, "Mean Values" = 3))
+
+```
 
 ## Part 2: Legacy of redlining in biodiversity observations
 
+```{r}
+# Perform spatial join to associate bird observations with HOLC grades
+observations_holc <- st_join(biodiversity_22, holc, join = st_intersects) 
+```
+
+```{r}
+
+# Step 1: Summarize total observations, including NAs
+total_observations <- nrow(observations_holc)  # Total rows including NAs
+
+# Step 2: Filter for redlined observations (not NA)
+redlined_observations <- observations_holc %>%
+  filter(!is.na(grade)) %>%
+  group_by(grade) %>%
+  summarise(redlined_count = n(), .groups = 'drop')
+
+# Convert redlined_observations to a data frame
+redlined_observations_df <- as.data.frame(redlined_observations)
+
+# Step 3: Combine both summaries
+summary <- redlined_observations_df %>%
+  mutate(
+    total_count = total_observations,
+    percent_redlined = (total_count/redlined_count)
+  ) %>%
+  select(grade, redlined_count, total_count, percent_redlined) %>%
+  st_drop_geometry()
+
+summary %>%
+  kable(format = "html", caption = "Summary of Redlined Observations by Grade") %>%
+  kable_styling("striped", full_width = F, position = "left") %>%
+  add_header_above(c(" " = 1, "Counts" = 2, "Percentage" = 1)) 
+
+
+```
 
