@@ -15,28 +15,35 @@ editor_options:
 ### Load libraries
 
 ```{r}
-library(sf)
-library(here)
-library(tmap)
-library(dplyr)
-library(tidyr)
-library(knitr)
-library(kableExtra)
+suppressMessages(library(sf))
+suppressMessages(library(here))
+suppressMessages(library(tmap))
+suppressMessages(library(dplyr))
+suppressMessages(library(tidyr))
+suppressMessages(library(knitr))
+suppressMessages(library(kableExtra))
+suppressMessages(library(ggplot2))
 ```
 
 ### Read in data and transform crs
 
-```{r}
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+# Ejscreen data, transform coordinate reference system
 ejscreen <- st_read(here::here("data", "ejscreen/EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb")) %>%
   st_transform(crs = 4326)
+# Ejscreen data, filter to CA
 ca_ejscreen <- ejscreen %>%
   filter(STATE_NAME == "California")
+# Ejscreen data, filter to LA
 la_ejscreen <- ca_ejscreen %>%
   filter(CNTY_NAME == "Los Angeles County")
+# HOLC data, transform coordinate reference system
 holc <- st_read(here::here("data", "mapping-inequality/mapping-inequality-los-angeles.json")) %>%
   st_transform(crs = 4326)
+# Biodiversity data, transform coordinate reference system
 biodiversity <- st_read(here::here("data","gbif-birds-LA/gbif-birds-LA.shp")) %>%
   st_transform(crs = 4326)
+# HOLC data, filter 2022
 biodiversity_22 <- biodiversity %>%
   filter(year == "2022")
 ```
@@ -44,12 +51,11 @@ biodiversity_22 <- biodiversity %>%
 #### Make sure data has the same crs
 
 ```{r}
+# Save crs of each dataset
 crs1 <- st_crs(ejscreen)
 crs2 <- st_crs(holc)
 crs3 <- st_crs(biodiversity)
-```
-
-```{r}
+# Compare crs of each dataset with if/elif/else statement
 if (identical(crs1, crs2) && identical(crs1, crs3)) {
     print("All datasets have the same CRS!")
 } else if (is.null(crs1) || is.null(crs2) || is.null(crs3)) {
@@ -62,6 +68,7 @@ if (identical(crs1, crs2) && identical(crs1, crs3)) {
 ```
 
 ```{r}
+# Identify class of variable
 class(holc$grade)
 ```
 
@@ -69,46 +76,83 @@ class(holc$grade)
 ## Part 1: Legacy of redlining in current environmental (in)justice
 
 ```{r}
-
 # Make geometries valid
 holc <- st_make_valid(holc)
-
 # Set tmap mode to plot
 tmap_mode("plot")
-
-# Create the map
-map <- tm_shape(holc) +
+# Create map
+map <-   tm_shape(holc) +
   tm_fill("grade", 
-           title = "HOLC Grade") +
+           title = "HOLC Grade") + # Legend title
   tm_borders() +
   tm_shape(la_ejscreen) +
-  tm_borders(lwd = 0.5) +
-  tm_layout(title = "Historical Redlining Neighborhoods",
-            legend.position = c("left", "bottom"))
-
-# Print the map
+  tm_borders(lwd = 0.5) + # Border width
+  tm_layout(title = "Historical\nRedlining\nNeighborhoods", # Title
+            title.position = c("right", "top"),  
+            legend.position = c("left", "bottom"),
+            legend.title.size = 1.0,
+            title.size = 1.0, 
+            frame = FALSE) + # Eliminate frame
+  tm_compass(position = c("right", "bottom"), type = "4star", size = 1) +  # Compass
+  tm_scale_bar(position = c("right", "bottom"))  # Scale bar
+# Print map
 print(map)
-
 ```
 
 ```{r}
-holc_summary <- holc %>%
-  group_by(grade) %>%
-  summarise(count = n(), 
-            percent = (count / nrow(holc)) * 100) %>%
-  mutate(grade = ifelse(is.na(grade), "None", grade)) %>%
-  select(grade, count, percent) %>%
-  st_drop_geometry()
-
+# Summary
+holc_summary <- holc %>% # Data
+  mutate(grade = ifelse(is.na(grade), "None", grade)) %>% # Mutate NA to None
+  group_by(grade) %>% # Group by grade
+  summarise(count = n(), # Count total
+            percent = (count / nrow(holc)) * 100, # Calculate percent
+            .groups = 'drop') %>% # Keep regular data frame
+  select(grade, count, percent) %>% # Select
+  st_drop_geometry() # Remove geometry from output table
+# Display summary table
 holc_summary %>%
-  kable(format = "html", caption = "Summary of HOLC Grades") %>%
-  kable_styling("striped", full_width = F)
+  kable(format = "html", caption = "Summary of HOLC Grades") %>% # Format
+  kable_styling("striped", full_width = F) # Style
 ```
 
 ```{r}
-
+# Join data for mean by grade
 joined_data <- st_join(holc, la_ejscreen, join = st_intersects)
+```
 
+```{r}
+# Transform data to plot
+long_data <- joined_data %>%
+  select(grade, LOWINCPCT, P_PM25, P_LIFEEXPPCT) %>%
+  pivot_longer(cols = c(LOWINCPCT, P_PM25, P_LIFEEXPPCT), 
+               names_to = "variable", 
+               values_to = "percentile")
+# Create box plots
+ggplot(long_data, aes(x = grade, y = percentile, fill = grade)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, 
+               geom = "point", 
+               color = "black", 
+               size = 3, 
+               shape = 21, 
+               fill = "white") +  # Add mean point
+  labs(title = "Box Plots of Conditions by Grade",
+       x = "Grade",
+       y = "") +
+  facet_wrap(~ variable, 
+            scales = "free_y", 
+            labeller = as_labeller(c(
+                LOWINCPCT = "% Low Income",
+                P_PM25 = "Percentile\nParticulate Matter 2.5",
+                P_LIFEEXPPCT = "Percentile\nLow Life Expectancy"
+              ))) + 
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),  # Remove x-axis text
+    axis.title.x = element_blank(),  # Remove x-axis title
+    legend.position = "bottom")
+```
+
+```{r}
 # Calculate means for specified variables
 conditions_summary <- joined_data %>%
   group_by(grade) %>%
@@ -118,14 +162,18 @@ conditions_summary <- joined_data %>%
     mean_low_life_expectancy = mean(P_LIFEEXPPCT, na.rm = TRUE),
     .groups = 'drop'
   ) %>%
-  select(grade, mean_low_income, mean_particulate_matter, mean_low_life_expectancy) %>%
+  rename(
+    "% Low Income" = mean_low_income,
+    "% Particulate Matter" = mean_particulate_matter,
+    "% Low Life Expectancy" = mean_low_life_expectancy
+  ) %>%
+  select(grade, `% Low Income`, `% Particulate Matter`, `% Low Life Expectancy`) %>%
   st_drop_geometry()
-
+#
 conditions_summary %>%
   kable(format = "html", caption = "Summary of Conditions by Grade") %>%
-  kable_styling("striped", full_width = F, position = "left") %>%
+  kable_styling("striped", full_width = F, position = "center") %>%
   add_header_above(c(" " = 1, "Mean Values" = 3))
-
 ```
 
 ## Part 2: Legacy of redlining in biodiversity observations
@@ -136,33 +184,39 @@ observations_holc <- st_join(biodiversity_22, holc, join = st_intersects)
 ```
 
 ```{r}
-
-# Step 1: Summarize total observations, including NAs
-total_observations <- nrow(observations_holc)  # Total rows including NAs
-
-# Step 2: Filter for redlined observations (not NA)
+# Save total observations, including NAs
+total_observations <- nrow(observations_holc)
+# Filter redlined observations 
 redlined_observations <- observations_holc %>%
   filter(!is.na(grade)) %>%
   group_by(grade) %>%
-  summarise(redlined_count = n(), .groups = 'drop')
-
-# Convert redlined_observations to a data frame
-redlined_observations_df <- as.data.frame(redlined_observations)
-
-# Step 3: Combine both summaries
-summary <- redlined_observations_df %>%
-  mutate(
-    total_count = total_observations,
-    percent_redlined = (total_count/redlined_count)
-  ) %>%
-  select(grade, redlined_count, total_count, percent_redlined) %>%
-  st_drop_geometry()
-
-summary %>%
-  kable(format = "html", caption = "Summary of Redlined Observations by Grade") %>%
-  kable_styling("striped", full_width = F, position = "left") %>%
-  add_header_above(c(" " = 1, "Counts" = 2, "Percentage" = 1)) 
-
-
+  summarise(redlined_count = n(), .groups = 'drop') %>%
+  mutate(total_count = total_observations, 
+         percent_redlined = (redlined_count/total_count) * 100)
+# Create a bar plot
+ggplot(redlined_observations, aes(x = grade, y = percent_redlined, fill = grade)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Bird Observations within Redlined Neighborhoods by HOLC Grade",
+       x = "HOLC Grade",
+       y = "Percentage of Observations (%)") +
+  scale_fill_brewer(palette = "Set3") +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 
+```{r}
+# Create summary
+summary <- redlined_observations %>%  
+  select(grade, redlined_count, total_count, percent_redlined) %>%
+  rename(
+    "Redlined count" = redlined_count,
+    "Total count" = total_count,
+    "Percent redlined" = percent_redlined
+  ) %>%
+  st_drop_geometry()
+# View summary
+summary %>%
+  kable(format = "html", caption = "Summary of Redlined Observations by Grade") %>% # Format
+  kable_styling("striped", full_width = F, position = "center") %>% # Style
+  add_header_above(c(" " = 1, "Counts" = 2, "Percentage" = 1)) # Label
+```
