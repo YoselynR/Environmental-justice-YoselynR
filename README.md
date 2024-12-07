@@ -16,11 +16,11 @@
 ```
 Environmental-justice-YoselynR
 ├── README.md
-├── HW2.html
-├── HW2.qmd
+├── Environmental-justice-YoselynR.html
+├── Environmental-justice-YoselynR.qmd
 ├── .gitignore
 ├── LICENSE
-├── HW2_files
+├── Environmental-justice-YoselynR_files
 |   ├── .csv
 └── images
     │   .jpg
