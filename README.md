@@ -1,3 +1,27 @@
-# EDS 223 Homework Assignment #2
+# Geospatial analysis - Environmental justice
+*This is a project repository for UCSB's MEDS program, EDS 223 class.*
+### Author: Yos Ramirez
 
-All relevant data available [here](https://drive.google.com/file/d/14CauXFZkVh_6z2Euq0m1Sq1kHQ31fiMk/view?usp=drive_link).
+## About
+
+## Purpose
+
+## Highlights
+
+## Data
+
+## References
+
+## Repository organization
+```
+Environmental-justice-YoselynR
+├── README.md
+├── HW2.html
+├── HW2.qmd
+├── .gitignore
+├── LICENSE
+├── HW2_files
+|   ├── .csv
+└── images
+    │   .jpg
+```
