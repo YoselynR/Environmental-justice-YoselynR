@@ -2,7 +2,6 @@
 title: "Environmental Justice"
 subtitle: "Exploring patterns of environmental justice"
 author: "Yos"
-date: 10-23-24
 execute: 
   eval: true
 format:
@@ -33,7 +32,7 @@ suppressMessages(library(ggplot2))
 
 ### Read in data and transform crs
 
-2. Read in data, transform if needed, and filter
+2. Read in data, transform crs, and filter
 
 ```{r, results='hide', message=FALSE, warning=FALSE}
 # Ejscreen data, transform coordinate reference system
@@ -55,34 +54,6 @@ biodiversity <- st_read(here::here("data","gbif-birds-LA/gbif-birds-LA.shp")) %>
 biodiversity_22 <- biodiversity %>%
   filter(year == "2022")
 ```
-
-#### Make sure data has the same crs
-
-```{r}
-# Save crs of each dataset
-crs1 <- st_crs(ejscreen)
-crs2 <- st_crs(holc)
-crs3 <- st_crs(biodiversity)
-# Compare crs of each dataset with if/elif/else statement
-if (identical(crs1, crs2) && identical(crs1, crs3)) {
-    print("All datasets have the same CRS!")
-} else if (is.null(crs1) || is.null(crs2) || is.null(crs3)) {
-    print("One or more datasets do not have a defined CRS!")
-} else if (identical(crs1, crs2) || identical(crs1, crs3) || identical(crs2, crs3)) {
-    print("At least two datasets have the same CRS!")
-} else {
-    print("All datasets have different CRS!")
-}
-```
-
-- Transformed data while reading in but first I checked the crs. I can't add this chunk of code first because data needs to be loaded first. I didn't want to transform data after reading in because it is easier to do it while reading in. 
-
-```{r}
-# Identify class of variable
-class(holc$grade)
-```
-
-- Class of most used variable in this analysis.
 
 ## Part 1: Legacy of redlining in current environmental (in)justice
 
