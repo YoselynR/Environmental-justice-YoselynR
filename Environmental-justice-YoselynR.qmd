@@ -1,5 +1,5 @@
 ---
-title: "Homework Assignment #2"
+title: "Environmental Justice"
 subtitle: "Exploring patterns of environmental justice"
 author: "Yos"
 date: 10-23-24
