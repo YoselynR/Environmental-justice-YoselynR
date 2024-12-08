@@ -1,7 +1,7 @@
 ---
 title: "Environmental Justice"
 subtitle: "Exploring patterns of environmental justice"
-author: "Yos"
+author: "Yos Ramirez"
 execute: 
   eval: true
 format:
