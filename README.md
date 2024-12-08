@@ -6,7 +6,7 @@
 The Home Owners' Loan Corporation (HOLC) grades, created in the 1930s, categorized neighborhoods based on perceived safety for real estate investment. This practice led to the "redlining" of predominantly Black and Latino neighborhoods. Using geographic data (spatial features), maps were generated to visualize the distribution of HOLC grades across LA County and how these grades correlate with specific environmental variables, such as particulate matter exposure, low life expectancy, and low income. These redlined neighborhoods still exhibit enduring socioeconomic and environmental disadvantages. Biodiversity data was examined to see if redlining had any correlation with bird diversity in LA.
 
 ## Purpose
-The goal of this project is to explore the intersection of historical redlining practices and contemporary environmental and biodiversity challenges in the Los Angeles (LA) region, specifically focusing on the relationship between redlined neighborhoods, **Part 1** environmental justice (EJ), and **Part 2** biodiversity. 
+The goal of this project is to explore the intersection of historical redlining practices and contemporary environmental and biodiversity challenges in the Los Angeles (LA) region, specifically focusing on the relationship between redlined neighborhoods, **Part 1:** environmental justice (EJ), and **Part 2:** biodiversity. 
 
 ## Highlights
 - The map revealed that grade C neighborhoods (the most common in the region) are concentrated in certain parts of LA, with grade D areas less prevalent than initially assumed.
