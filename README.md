@@ -6,7 +6,7 @@
 The Home Owners' Loan Corporation (HOLC) grades, created in the 1930s, categorized neighborhoods based on perceived safety for real estate investment. This practice led to the "redlining" of predominantly Black and Latino neighborhoods. Using geographic data (spatial features), maps were generated to visualize the distribution of HOLC grades across LA County and how these grades correlate with specific environmental variables, such as particulate matter exposure, low life expectancy, and low income. These redlined neighborhoods still exhibit enduring socioeconomic and environmental disadvantages. Biodiversity data was examined to see if redlining had any correlation with bird diversity in LA.
 
 ## Purpose
-The goal of this project is to explore the intersection of historical redlining practices and contemporary environmental and biodiversity challenges in the Los Angeles (LA) region, specifically focusing on the relationship between redlined neighborhoods, environmental justice (EJ), and biodiversity. 
+The goal of this project is to explore the intersection of historical redlining practices and contemporary environmental and biodiversity challenges in the Los Angeles (LA) region, specifically focusing on the relationship between redlined neighborhoods, **Part 1** environmental justice (EJ), and **Part 2** biodiversity. 
 
 ## Highlights
 - The map revealed that grade C neighborhoods (the most common in the region) are concentrated in certain parts of LA, with grade D areas less prevalent than initially assumed.
@@ -22,13 +22,18 @@ The analysis supports the hypothesis that neighborhoods with poorer HOLC grades 
 ## Data
 The analysis incorporates three primary datasets:
 
-HOLC Grades: Historical redlining data for Los Angeles.
+[HOLC Grades](https://dsl.richmond.edu/panorama/redlining/#loc=5/39.1/-94.58&text=downloads): Historical redlining data for Los Angeles.
 
 EJScreen Data: A tool developed by the EPA to assess environmental and demographic conditions in U.S. communities.
 
-Biodiversity Data: Bird observation data from the Global Biodiversity Information Facility (GBIF) for LA County.
+[Biodiversity Data]https://www.epa.gov/ejscreen/download-ejscreen-data: Bird observation data from the Global Biodiversity Information Facility (GBIF) for LA County.
 
 ## References
+EDS 223 Geospatial. (n.d.). GBIF.org assignment. Retrieved [Oct 19, 2024], from https://eds-223-geospatial.github.io/assignments/gbif.org
+
+University of Richmond. (n.d.). Redlining maps. Digital Scholarship Lab. Retrieved [Oct 19,2024], from https://dsl.richmond.edu/panorama/redlining/#loc=5/39.1/-94.58&text=downloads
+
+U.S. Environmental Protection Agency (EPA). (n.d.). Download EJSCREEN data. Environmental Justice Screening and Mapping Tool (EJSCREEN). Retrieved [Oct 19,2024], from https://www.epa.gov/ejscreen/download-ejscreen-data
 
 ## Repository organization
 ```
@@ -38,8 +43,8 @@ Environmental-justice-YoselynR
 ├── Environmental-justice-YoselynR.qmd
 ├── .gitignore
 ├── LICENSE
-├── Environmental-justice-YoselynR_files
-|   ├── .csv
-└── images
-    │   .jpg
+└──  Environmental-justice-YoselynR_files
+     ├── figure-html
+     └── libs
 ```
+`data` folder has been excluded from repository organization
